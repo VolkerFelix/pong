@@ -55,23 +55,24 @@ def discounted_rewards(r):
   """calculates the discounted rewards of an episode backwards in time"""
   # G_t+1 = R + gamma * G_t
   # the reason to calculate it backwards in time is that it enables us to use an iterative algo
-  discounted_r = np.zeros_like(r)
+  discounted_r = np.zeros_like(r).astype('float64')
   summed_up_r = 0
   for t in reversed(range(0, r.size)):
-    if t != 0:
+    if r[t] != 0:
       summed_up_r = 0 # One player has won, so we need to reset
-    else:
-      summed_up_r = r[t] + gamma * summed_up_r
+    summed_up_r = r[t] + gamma * summed_up_r
     discounted_r[t] = summed_up_r
   return discounted_r
 
 env = gym.make('ALE/Pong-v5', render_mode='rgb_array')
 observation = env.reset()
+observation = observation[0]
 prev_x = None # used in computing the difference frame
 xs,hs,dlogps,drs = [],[],[],[]
 running_reward = None
 reward_sum = 0
 episode_number = 0
+
 while True:
   if render: env.render()
 
@@ -102,13 +103,19 @@ while True:
     # stack together all inputs, hidden states, action gradients, and rewards for this episode
     epx = np.vstack(xs)
     eph = np.vstack(hs)
-    eph1 = np.vstack(h1s)
     epdlogp = np.vstack(dlogps)
     epr = np.vstack(drs)
-    xs,hs,h1s,dlogps,drs = [],[],[],[],[] # reset array memory
+    xs,hs,dlogps,drs = [],[],[],[] # reset array memory
 
     # compute the discounted reward
     discounted_epr = discounted_rewards(epr)
+    print("Rewards: ", epr)
+    print("Discounted rewards: ", discounted_epr)
     # standardize the rewards to be unit normal (helps control the gradient estimator variance)
     discounted_epr -= np.mean(discounted_epr)
     discounted_epr /= np.std(discounted_epr)
+
+    reward_sum = 0
+    observation = env.reset() # reset env
+    observation = observation[0]
+    prev_x = None
