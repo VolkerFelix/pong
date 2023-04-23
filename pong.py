@@ -43,10 +43,72 @@ def prepro(f_field_input):
   cropped_field_down[cropped_field_down != 0] = 1 # everything else (paddles, ball) just set to 1
   return cropped_field_down.astype(float).ravel()
 
-squares = np.array([[[x for x in range(3)] for y in range(210)] for z in range(160)])
+def policy_forward(x):
+  """forward path through the neural net which serves as the policy"""
+  h = np.dot(model['W1'], x)
+  h[h<0] = 0 # ReLu activation
+  logp = np.dot(model['W2'], h)
+  p = sigmoid(logp) # Prob between 0 and 1
+  return p, h # return probability of taking action 2, and hidden state
 
-print('gym:', gym.__version__)
+def discounted_rewards(r):
+  """calculates the discounted rewards of an episode backwards in time"""
+  # G_t+1 = R + gamma * G_t
+  # the reason to calculate it backwards in time is that it enables us to use an iterative algo
+  discounted_r = np.zeros_like(r)
+  summed_up_r = 0
+  for t in reversed(range(0, r.size)):
+    if t != 0:
+      summed_up_r = 0 # One player has won, so we need to reset
+    else:
+      summed_up_r = r[t] + gamma * summed_up_r
+    discounted_r[t] = summed_up_r
+  return discounted_r
 
-env = gym.make("Pong-v0")
+env = gym.make('ALE/Pong-v5', render_mode='rgb_array')
 observation = env.reset()
-pprint.pprint(observation.shape)
+prev_x = None # used in computing the difference frame
+xs,hs,dlogps,drs = [],[],[],[]
+running_reward = None
+reward_sum = 0
+episode_number = 0
+while True:
+  if render: env.render()
+
+  # preprocess the observation, set input to network to be difference image
+  cur_x = prepro(observation)
+  x = cur_x - prev_x if prev_x is not None else np.zeros(D)
+  prev_x = cur_x
+
+  # forward the policy network and sample an action from the returned probability  
+  aprob, h = policy_forward(x)
+  action = 2 if np.random.uniform() < aprob else 3 # roll the dice!
+
+  # record various intermediates (needed later for backprop)
+  xs.append(x) # observation
+  hs.append(h) # hidden state
+  y = 1 if action == 2 else 0 # fake label
+  dlogps.append(y - aprob) # grad that encourages the action that was taken to be taken
+
+  # step the environment and get new measurements
+  observation, reward, done, truncated, info = env.step(action)
+  reward_sum += reward
+  drs.append(reward_sum)
+
+  if done:
+    # an episode has finished (= one player reached a score of 21)
+    episode_number += 1
+
+    # stack together all inputs, hidden states, action gradients, and rewards for this episode
+    epx = np.vstack(xs)
+    eph = np.vstack(hs)
+    eph1 = np.vstack(h1s)
+    epdlogp = np.vstack(dlogps)
+    epr = np.vstack(drs)
+    xs,hs,h1s,dlogps,drs = [],[],[],[],[] # reset array memory
+
+    # compute the discounted reward
+    discounted_epr = discounted_rewards(epr)
+    # standardize the rewards to be unit normal (helps control the gradient estimator variance)
+    discounted_epr -= np.mean(discounted_epr)
+    discounted_epr /= np.std(discounted_epr)
