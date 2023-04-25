@@ -115,6 +115,9 @@ while True:
     discounted_epr -= np.mean(discounted_epr)
     discounted_epr /= np.std(discounted_epr)
 
+    epdlogp *= discounted_epr # modulate the gradient with advantage (PG magic happens right here.)
+    grad = policy_backward(eph, epdlogp)
+
     reward_sum = 0
     observation = env.reset() # reset env
     observation = observation[0]
