@@ -64,6 +64,9 @@ def discounted_rewards(r):
     discounted_r[t] = summed_up_r
   return discounted_r
 
+def policy_backwards(eph, edplogp):
+    """ backward pass. (eph is array of intermediate hidden states) """
+
 env = gym.make('ALE/Pong-v5', render_mode='rgb_array')
 observation = env.reset()
 observation = observation[0]
@@ -88,7 +91,21 @@ while True:
   # record various intermediates (needed later for backprop)
   xs.append(x) # observation
   hs.append(h) # hidden state
+
+  # Background:
+  # aprob = sigmoid(in)
+  # if action == 2:
+  # logprob = log(aprob)
+  # dlogprob/daprob = dlog(aprob)/daprob * daprob/din
+  # = 1/aprob * d_aprob/d_in = 1/aprob * sigmoid(in)(1-sigmoid(in))
+  # = 1 - aprob
+  # if action == 3:
+  # logprob = log(1-aprob)
+  # dlogprob/daprob = dlog(1-aprob)/daprob * daprob/din
+  # = -1/(1-aprob) * sigmoid(in)(1-sigmoid(in))
+  # = -aprob/(1-aprob)*(1-aprob) = -aprob = 0 - aprob
   y = 1 if action == 2 else 0 # fake label
+
   dlogps.append(y - aprob) # grad that encourages the action that was taken to be taken
 
   # step the environment and get new measurements
