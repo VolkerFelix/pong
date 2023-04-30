@@ -154,6 +154,15 @@ while True:
     epdlogp *= discounted_epr # modulate the gradient with advantage (PG magic happens right here.)
     grad = policy_backward(epx, eph, epdlogp)
 
+    for k in model:
+      grad_buffer[k] += grad[k] # accumulate gradient over batch
+
+    # perform rmsprop parameter update every batch_size episodes
+    # Background on gradient descent:
+    # Use backprob to calculate the gradients based on the loss function
+    # Update the weights of the model using learning rate alpha:
+    # W = W - alpha * dW
+
     reward_sum = 0
     observation = env.reset() # reset env
     observation = observation[0]
