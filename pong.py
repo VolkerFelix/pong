@@ -64,8 +64,27 @@ def discounted_rewards(r):
     discounted_r[t] = summed_up_r
   return discounted_r
 
-def policy_backwards(eph, edplogp):
-    """ backward pass. (eph is array of intermediate hidden states) """
+def policy_backward(epx, eph, edplogp):
+  """ backward pass. (eph is array of intermediate hidden states) """
+  # dC/dW2 = dC/dZ2 * dZ2/dW2 = dC/dZ2 * A1
+  # = dC/dA2 * dA2/dZ2 * A1
+  # with A2 = sigmoid(Z2) = aprob and C = log(A2)
+  # = 1/aprob * aprob * (1-aprob) * A1
+  # = edplogp * A1
+  # with A1 = eph
+  dW2 = np.dot(eph.T, edplogp).ravel()
+  # dC/dW1 = dC/dZ1 * dZ1/dW1 = dC/dZ1 * A0
+  # = dC/dA1 * dA1/dZ1 * A0
+  # = dC/dA1 * dReLu(Z1) * A0
+  # = dC/dZ2 * dZ2/dA1 * dReLu(Z1) * A0
+  # = dC/dZ2 * W2 * dReLu(Z1) * A0
+  # with dC/dZ2 = (1-aprob) = edplogp and dReLu(Z1) = 1 for Z1>0 and 0 for Z1<0
+  # = edplogp * W2 * dReLu* A0
+  dh = np.outer(edplogp, model['W2'])
+  dh[eph<=0] = 0 # Derivative of ReLu
+  dW1 = np.dot(dh.T, epx)
+  return {'W1':dW1, 'W2':dW2}
+
 
 env = gym.make('ALE/Pong-v5', render_mode='rgb_array')
 observation = env.reset()
@@ -133,7 +152,7 @@ while True:
     discounted_epr /= np.std(discounted_epr)
 
     epdlogp *= discounted_epr # modulate the gradient with advantage (PG magic happens right here.)
-    grad = policy_backward(eph, epdlogp)
+    grad = policy_backward(epx, eph, epdlogp)
 
     reward_sum = 0
     observation = env.reset() # reset env
