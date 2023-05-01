@@ -145,8 +145,6 @@ while True:
 
     # compute the discounted reward
     discounted_epr = discounted_rewards(epr)
-    print("Rewards: ", epr)
-    print("Discounted rewards: ", discounted_epr)
     # standardize the rewards to be unit normal (helps control the gradient estimator variance)
     discounted_epr -= np.mean(discounted_epr)
     discounted_epr /= np.std(discounted_epr)
@@ -162,6 +160,23 @@ while True:
     # Use backprob to calculate the gradients based on the loss function
     # Update the weights of the model using learning rate alpha:
     # W = W - alpha * dW
+    # Background on rmsprop:
+    # We want the gradients to oscillate less and move faster in the horizonal direction
+    # towards the minimum for a 2-D problem. Rmsprop works similarly as gradient descent 
+    # with momentum, which uses the exponentially weighted averages of the gradients
+    # in order to dampens out the oscillations.
+    # https://www.youtube.com/watch?v=_e-LFe_igno
+    # Rmsprop formula:
+    # S_dw = beta * S_dw + (1-beta) * dw^2
+    # W = W - alpha * dw / sqrt(S_dw)
+
+    if episode_number % batch_size == 0:
+      for k,v in model.items():
+        g = grad_buffer[k] # gradient
+        print(v, " :", g)
+        rmsprop_cache[k] = decay_rate * rmsprop_cache[k] + (1-decay_rate) * g**2
+        model[k] += learning_rate * g / (np.sqrt(rmsprop_cache[k]) * 1e-5) # 1e-5 is added to prevent diff by 0
+        grad_buffer[k] = np.zeros_like(v) # reset batch gradient buffer
 
     reward_sum = 0
     observation = env.reset() # reset env
