@@ -84,10 +84,12 @@ def policy_backward(epx, eph, edplogp):
   dW1 = np.dot(dh.T, epx)
   return {'W1':dW1, 'W2':dW2}
 
-
-env = gym.make('ALE/Pong-v5', render_mode='human')
+# For gym ~ 0.26
+# env = gym.make('ALE/Pong-v5', render_mode='human')
+env = gym.make('Pong-v4')
 observation = env.reset()
-observation = observation[0]
+# For gym ~ 0.26
+# observation = observation[0]
 prev_x = None # used in computing the difference frame
 xs,hs,dlogps,drs = [],[],[],[]
 running_reward = None
@@ -128,7 +130,10 @@ while True:
   dlogps.append(y - aprob) # grad that encourages the action that was taken to be taken
 
   # step the environment and get new measurements
-  observation, reward, done, truncated, info = env.step(action)
+  # For gym ~ 0.26
+  # observation, reward, done, truncated, info = env.step(action)
+  observation, reward, done, info = env.step(action)
+
   reward_sum += reward
 
   drs.append(reward_sum)
@@ -185,7 +190,8 @@ while True:
       pickle.dump(model, open('save.p', 'wb'))
     reward_sum = 0
     observation = env.reset() # reset env
-    observation = observation[0]
+    # For gym ~ 0.26
+    # observation = observation[0]
     prev_x = None
 
   if reward != 0: # Pong has either +1 or -1 reward exactly when the game ends.
