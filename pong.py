@@ -4,16 +4,15 @@
 import numpy as np
 import gym
 import pickle
-import pprint
 
 # hyperparameters
 H = 200 # number of hidden layer neurons
 batch_size = 10 # every how many episodes to do a param update?
-learning_rate = 1e-4
+learning_rate = 1e-3
 gamma = 0.99 # discount factor for reward
 decay_rate = 0.99 # decay factor for RMSProp leaky sum of grad^2
-resume = False # resume from previous checkpoint?
-render = False
+resume = True # resume from previous checkpoint?
+render = True
 
 # model initialization
 D = 80 * 80 # input dimensionality: 80x80 grid
@@ -86,7 +85,7 @@ def policy_backward(epx, eph, edplogp):
   return {'W1':dW1, 'W2':dW2}
 
 
-env = gym.make('ALE/Pong-v5', render_mode='rgb_array')
+env = gym.make('ALE/Pong-v5', render_mode='human')
 observation = env.reset()
 observation = observation[0]
 prev_x = None # used in computing the difference frame
@@ -96,7 +95,8 @@ reward_sum = 0
 episode_number = 0
 
 while True:
-  if render: env.render()
+  if render:
+    env.render()
 
   # preprocess the observation, set input to network to be difference image
   cur_x = prepro(observation)
@@ -130,6 +130,7 @@ while True:
   # step the environment and get new measurements
   observation, reward, done, truncated, info = env.step(action)
   reward_sum += reward
+
   drs.append(reward_sum)
 
   if done:
@@ -173,12 +174,19 @@ while True:
     if episode_number % batch_size == 0:
       for k,v in model.items():
         g = grad_buffer[k] # gradient
-        print(v, " :", g)
-        rmsprop_cache[k] = decay_rate * rmsprop_cache[k] + (1-decay_rate) * g**2
-        model[k] += learning_rate * g / (np.sqrt(rmsprop_cache[k]) * 1e-5) # 1e-5 is added to prevent diff by 0
+        rmsprop_cache[k] = decay_rate * rmsprop_cache[k] + (1 - decay_rate) * g**2
+        model[k] += learning_rate * g / (np.sqrt(rmsprop_cache[k]) + 1e-5) # 1e-5 is added to prevent diff by 0
         grad_buffer[k] = np.zeros_like(v) # reset batch gradient buffer
 
+    # book-keeping
+    running_reward = reward_sum if running_reward is None else running_reward * 0.99 + reward_sum * 0.01
+    print('Resetting env. Episode reward total was {}. Running mean: {}'.format(reward_sum, running_reward))
+    if episode_number % 100  == 0:
+      pickle.dump(model, open('save.p', 'wb'))
     reward_sum = 0
     observation = env.reset() # reset env
     observation = observation[0]
     prev_x = None
+
+  if reward != 0: # Pong has either +1 or -1 reward exactly when the game ends.
+    print('Episode number {}: Game finished with reward: {}'.format(episode_number, reward) + ('' if reward == -1 else '!!!!!!!'))
