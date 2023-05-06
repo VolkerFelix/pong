@@ -12,7 +12,7 @@ learning_rate = 1e-3
 gamma = 0.99 # discount factor for reward
 decay_rate = 0.99 # decay factor for RMSProp leaky sum of grad^2
 resume = True # resume from previous checkpoint?
-render = True
+render = False
 
 # model initialization
 D = 80 * 80 # input dimensionality: 80x80 grid
