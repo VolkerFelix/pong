@@ -8,10 +8,10 @@ import pickle
 # hyperparameters
 H = 200 # number of hidden layer neurons
 batch_size = 10 # every how many episodes to do a param update?
-learning_rate = 1e-3
+learning_rate = 0.001
 gamma = 0.99 # discount factor for reward
 decay_rate = 0.99 # decay factor for RMSProp leaky sum of grad^2
-resume = True # resume from previous checkpoint?
+resume = False # resume from previous checkpoint?
 render = False
 
 # model initialization
@@ -114,6 +114,14 @@ while True:
   hs.append(h) # hidden state
 
   # Background:
+  # Classic policy gradient algo = REINFORCE
+  # gradient(Expectaion[r(tau)] = Expectation[(SUM(G_t * gradient * log * PI_teta(a_t|s_t)))]
+  # With PI_teta: Policy PI with its params teta
+  # PI_teta is the output of the 2-layer policy network: aprob
+  # Hint: In order to get rid of the expectation, we sample over a large number of trajectories
+  # and average them out. This technique is called Markov Chain Monte-Carlo.
+  #
+  # Calculate the gradient * log * PI_teta:
   # aprob = sigmoid(in)
   # if action == 2:
   # logprob = log(aprob)
@@ -136,7 +144,7 @@ while True:
 
   reward_sum += reward
 
-  drs.append(reward_sum)
+  drs.append(reward)
 
   if done:
     # an episode has finished (= one player reached a score of 21)
