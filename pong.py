@@ -4,6 +4,19 @@
 import numpy as np
 import gym
 import pickle
+import matplotlib.pyplot as plt
+import time
+
+from IPython import display
+
+def show_state(f_env, f_step=0, f_info=""):
+  plt.figure()
+  plt.clf()
+  plt.imshow(f_env.render())
+  plt.title("Pong | Step: {} {}".format(f_step, f_info))
+  plt.axis('off')
+  plt.show()
+  plt.close()
 
 # hyperparameters
 H = 200 # number of hidden layer neurons
@@ -12,7 +25,7 @@ learning_rate = 0.001
 gamma = 0.99 # discount factor for reward
 decay_rate = 0.99 # decay factor for RMSProp leaky sum of grad^2
 resume = True # resume from previous checkpoint?
-render = False
+render = True
 
 # model initialization
 D = 80 * 80 # input dimensionality: 80x80 grid
@@ -85,11 +98,11 @@ def policy_backward(epx, eph, edplogp):
   return {'W1':dW1, 'W2':dW2}
 
 # For gym ~ 0.26
-# env = gym.make('ALE/Pong-v5', render_mode='human')
-env = gym.make('Pong-v4')
+#env = gym.make('ALE/Pong-v5', render_mode='rgb_array')
+env = gym.make('Pong-v4', render_mode='rgb_array')
 observation = env.reset()
 # For gym ~ 0.26
-# observation = observation[0]
+observation = observation[0]
 prev_x = None # used in computing the difference frame
 xs,hs,dlogps,drs = [],[],[],[]
 running_reward = None
@@ -98,7 +111,12 @@ episode_number = 0
 
 while True:
   if render:
-    env.render()
+    '''
+    env_rendered = env.render()
+    plt.figure()
+    plt.imshow(env_rendered)
+    plt.show()
+    '''
 
   # preprocess the observation, set input to network to be difference image
   cur_x = prepro(observation)
@@ -139,8 +157,10 @@ while True:
 
   # step the environment and get new measurements
   # For gym ~ 0.26
-  # observation, reward, done, truncated, info = env.step(action)
-  observation, reward, done, info = env.step(action)
+  observation, reward, done, truncated, info = env.step(action)
+  #observation, reward, done, info = env.step(action)
+
+  show_state(env)
 
   reward_sum += reward
 
@@ -199,7 +219,7 @@ while True:
     reward_sum = 0
     observation = env.reset() # reset env
     # For gym ~ 0.26
-    # observation = observation[0]
+    observation = observation[0]
     prev_x = None
 
   if reward != 0: # Pong has either +1 or -1 reward exactly when the game ends.
