@@ -26,7 +26,7 @@ frame_dim['width'] = 210
 frame_dim['hight'] = 160
 
 if resume:
-  model = pickle.load(open('save.p', 'rb'))
+  model = pickle.load(open('model/save.p', 'rb'))
 else:
   model = {}
   model['W1'] = np.random.randn(H,D) / np.sqrt(D) # "Xavier" initialization
