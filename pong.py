@@ -4,19 +4,7 @@
 import numpy as np
 import gym
 import pickle
-import matplotlib.pyplot as plt
-import time
-
-from IPython import display
-
-def show_state(f_env, f_step=0, f_info=""):
-  plt.figure()
-  plt.clf()
-  plt.imshow(f_env.render())
-  plt.title("Pong | Step: {} {}".format(f_step, f_info))
-  plt.axis('off')
-  plt.show()
-  plt.close()
+import video_rendering as vr
 
 # hyperparameters
 H = 200 # number of hidden layer neurons
@@ -29,6 +17,13 @@ render = True
 
 # model initialization
 D = 80 * 80 # input dimensionality: 80x80 grid
+
+# video creation
+rgb_array_buffer = []
+nr_episodes_to_render = 1
+frame_dim = {}
+frame_dim['width'] = 210
+frame_dim['hight'] = 160
 
 if resume:
   model = pickle.load(open('save.p', 'rb'))
@@ -98,8 +93,8 @@ def policy_backward(epx, eph, edplogp):
   return {'W1':dW1, 'W2':dW2}
 
 # For gym ~ 0.26
-#env = gym.make('ALE/Pong-v5', render_mode='rgb_array')
-env = gym.make('Pong-v4', render_mode='rgb_array')
+env = gym.make('ALE/Pong-v5', render_mode='rgb_array')
+#env = gym.make('Pong-v4', render_mode='rgb_array')
 observation = env.reset()
 # For gym ~ 0.26
 observation = observation[0]
@@ -160,7 +155,7 @@ while True:
   observation, reward, done, truncated, info = env.step(action)
   #observation, reward, done, info = env.step(action)
 
-  show_state(env)
+  vr.store_step(rgb_array_buffer, env)
 
   reward_sum += reward
 
@@ -216,6 +211,10 @@ while True:
     print('Resetting env. Episode reward total was {}. Running mean: {}'.format(reward_sum, running_reward))
     if episode_number % 100  == 0:
       pickle.dump(model, open('save.p', 'wb'))
+
+    if episode_number % nr_episodes_to_render == 0:
+      vr.convert_and_release_video(rgb_array_buffer, frame_dim)
+
     reward_sum = 0
     observation = env.reset() # reset env
     # For gym ~ 0.26
@@ -224,3 +223,4 @@ while True:
 
   if reward != 0: # Pong has either +1 or -1 reward exactly when the game ends.
     print('Episode number {}: Game finished with reward: {}'.format(episode_number, reward) + ('' if reward == -1 else '!!!!!!!'))
+
