@@ -1,4 +1,6 @@
-# Trains an agent with (stochastic) Policy Gradients on Pong. Uses OpenAI Gym.
+# Trains an agent with (stochastic) Policy Gradients on Pong.
+Based on this awesome blog post from the great Andrej Kaparthy
+https://karpathy.github.io/2016/05/31/rl/
 
 ## Install
 Create a virtual env and activate it.
