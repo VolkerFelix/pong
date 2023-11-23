@@ -4,7 +4,6 @@
 import numpy as np
 import gym
 import pickle
-import video_rendering as vr
 
 # hyperparameters
 H = 200 # number of hidden layer neurons
@@ -16,14 +15,7 @@ resume = True # resume from previous checkpoint?
 render = True
 
 # model initialization
-D = 80 * 80 # input dimensionality: 80x80 grid
-
-# video creation
-rgb_array_buffer = []
-nr_episodes_to_render = 1
-frame_dim = {}
-frame_dim['width'] = 210
-frame_dim['hight'] = 160
+D = 80 * 80 # input dimensionality: 80 x 80 grid
 
 if resume:
   model = pickle.load(open('model/save.p', 'rb'))
@@ -92,13 +84,12 @@ def policy_backward(epx, eph, edplogp):
   dW1 = np.dot(dh.T, epx)
   return {'W1':dW1, 'W2':dW2}
 
-# For gym ~ 0.26
-env = gym.make('ALE/Pong-v5', render_mode='rgb_array')
-#env = gym.make('Pong-v4', render_mode='rgb_array')
+env = gym.make('ALE/Pong-v5', render_mode='human')
+
 observation = env.reset()
-# For gym ~ 0.26
+
 observation = observation[0]
-prev_x = None # used in computing the difference frame
+prev_x = None # used for computing the difference frame
 xs,hs,dlogps,drs = [],[],[],[]
 running_reward = None
 reward_sum = 0
@@ -106,12 +97,7 @@ episode_number = 0
 
 while True:
   if render:
-    '''
-    env_rendered = env.render()
-    plt.figure()
-    plt.imshow(env_rendered)
-    plt.show()
-    '''
+    env.render()
 
   # preprocess the observation, set input to network to be difference image
   cur_x = prepro(observation)
@@ -151,11 +137,7 @@ while True:
   dlogps.append(y - aprob) # grad that encourages the action that was taken to be taken
 
   # step the environment and get new measurements
-  # For gym ~ 0.26
   observation, reward, done, truncated, info = env.step(action)
-  #observation, reward, done, info = env.step(action)
-
-  vr.store_step(rgb_array_buffer, env)
 
   reward_sum += reward
 
@@ -211,9 +193,6 @@ while True:
     print('Resetting env. Episode reward total was {}. Running mean: {}'.format(reward_sum, running_reward))
     if episode_number % 100  == 0:
       pickle.dump(model, open('save.p', 'wb'))
-
-    if episode_number % nr_episodes_to_render == 0:
-      vr.convert_and_release_video(rgb_array_buffer, frame_dim)
 
     reward_sum = 0
     observation = env.reset() # reset env
