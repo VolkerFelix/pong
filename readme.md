@@ -15,5 +15,8 @@ Install requirements.
 ```pip install -r requirements.txt```
 
 Then install the gym.
-
+```pip install "gym"```
 ```pip install "gym[all]"```
+
+Accept liceneces.
+```pip install "gym[accept-rom-license, atari]"```
