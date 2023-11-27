@@ -4,16 +4,15 @@ Based on this awesome blog post from the great Andrej Kaparthy
 https://karpathy.github.io/2016/05/31/rl/
 
 ## Install
-Create a virtual env and activate it.
-
-```python -m venv venv```
-
+Create a virtual env and activate it.  
+```python -m venv venv```  
 ```source venv/bin/activate```
 
-Install requirements.
-
+Install requirements.  
 ```pip install -r requirements.txt```
 
-Then install the gym.
+Then install the gym.  
+```pip install "gym[atari]"```
 
-```pip install "gym[all]"```
+Accept licences.  
+```pip install "gym[accept-rom-license, atari]"```
