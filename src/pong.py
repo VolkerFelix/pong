@@ -14,7 +14,6 @@ DECAY_RATE = 0.99 # Decay factor for RMSProp leaky sum of grad^2
 
 # Configuration
 RESUME = True # Resume from previous checkpoint?
-RENDER = True
 CROPPED_FRAME_DIM = 80 * 80
 CROP_LEFT = 35 # Pixels to be cropped counting from the left
 CROP_RIGHT = 15 # Pixels to be cropped counting from the right
@@ -59,28 +58,33 @@ else:
 grad_buffer = { key : np.zeros_like(value) for key, value in model.items() } # update buffers that add up gradients over a batch
 rmsprop_cache = { key : np.zeros_like(value) for key,value in model.items() } # rmsprop memory
 
-def discounted_rewards(r):
-  """calculates the discounted rewards of an episode backwards in time"""
-  # G_t+1 = R + GAMMA * G_t
-  # the reason to calculate it backwards in time is that it enables us to use an iterative algo
-  discounted_r = np.zeros_like(r).astype('float64')
-  summed_up_r = 0
-  for t in reversed(range(0, r.size)):
-    if r[t] != 0:
-      summed_up_r = 0 # One player has won, so we need to reset
-    summed_up_r = r[t] + GAMMA * summed_up_r
-    discounted_r[t] = summed_up_r
-  return discounted_r
+def discounted_rewards(f_rewards: np.array) -> np.array:
+  """Calculates the discounted rewards of an episode backwards in time"""
+  # G_t = R_t + GAMMA * R_t+1 + GAMMA^2 * R_t+2 + GAMMA^3 * R_t+3 + ...
+  # G_t = R_t + GAMMA ( R_t+1 + GAMMA * R_t+2 + GAMMA^2 * R_t+3 + ... )
+  # In order to calculate this iteratively, we need to run it "backwards" in time
+  # G_new = R + GAMMA * G_prev
+  discounted_rewards = np.zeros_like(f_rewards).astype('float64')
+  summed_up_rewards = 0
+  for t in reversed(range(0, f_rewards.size)):
+    if f_rewards[t] != 0:
+      # if reward = +1 -> You won
+      # if reward = -1 -> OpenAI bot won
+      # --> need to reset
+      summed_up_rewards = 0
+    summed_up_rewards = f_rewards[t] + GAMMA * summed_up_rewards
+    discounted_rewards[t] = summed_up_rewards
+  return discounted_rewards
 
-def policy_backward(epx, eph, edplogp):
-  """ backward pass. (eph is array of intermediate hidden states) """
+def policy_backward(f_epx, f_eph, f_edplogp):
+  """Backward pass. (eph is array of intermediate hidden states)"""
   # dC/dW2 = dC/dZ2 * dZ2/dW2 = dC/dZ2 * A1
   # = dC/dA2 * dA2/dZ2 * A1
   # with A2 = sigmoid(Z2) = aprob and C = log(A2)
   # = 1/aprob * aprob * (1-aprob) * A1
   # = edplogp * A1
   # with A1 = eph
-  dW2 = np.dot(eph.T, edplogp).ravel()
+  dW2 = np.dot(f_eph.T, f_edplogp).ravel()
   # dC/dW1 = dC/dZ1 * dZ1/dW1 = dC/dZ1 * A0
   # = dC/dA1 * dA1/dZ1 * A0
   # = dC/dA1 * dReLu(Z1) * A0
@@ -88,14 +92,12 @@ def policy_backward(epx, eph, edplogp):
   # = dC/dZ2 * W2 * dReLu(Z1) * A0
   # with dC/dZ2 = (1-aprob) = edplogp and dReLu(Z1) = 1 for Z1>0 and 0 for Z1<0
   # = edplogp * W2 * dReLu* A0
-  dh = np.outer(edplogp, model['W2'])
-  dh[eph<=0] = 0 # Derivative of ReLu
-  dW1 = np.dot(dh.T, epx)
+  dh = np.outer(f_edplogp, model['W2'])
+  dh[f_eph<=0] = 0 # Derivative of ReLu
+  dW1 = np.dot(dh.T, f_epx)
   return {'W1':dW1, 'W2':dW2}
 
 env = gym.make('ALE/Pong-v5', render_mode='human')
-
-print(env.metadata)
 
 observation, info = env.reset()
 
@@ -111,9 +113,6 @@ if __name__ == "__main__":
   check_dimensions_match()
 
   while True:
-    if RENDER:
-      env.render()
-
     # preprocess the observation, set input to network to be difference image
     cur_x = preprocess_frame(observation)
     x = cur_x - prev_x if prev_x is not None else np.zeros(CROPPED_FRAME_DIM)
