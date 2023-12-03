@@ -1,0 +1,64 @@
+\documentclass{article} % This command is used to set the type of document you are working on such as an article, book, or presenation
+
+\usepackage{geometry} % This package allows the editing of the page layout
+\usepackage{amsmath}  % This package allows the use of a large range of mathematical formula, commands, and symbols
+\usepackage{graphicx}  % This package allows the importing of images
+\usepackage{hyperref}
+
+\newcommand{\question}[2][]{\begin{flushleft}
+        \textbf{Question #1}: \textit{#2}
+
+\end{flushleft}}
+\newcommand{\sol}{\textbf{Solution}:} %Use if you want a boldface solution line
+\begin{document}
+    
+    \section{Forward path} 
+    \begin{align*}
+        Z_{1} &= W_{1} \cdot X \\
+        A_{1} &= ReLU(Z_{1}) && \equiv \text{'h' in code} \\
+        Z_{2} &= W_{2} \cdot A_{1} && \equiv \text{'logp' in code} \\
+        A_{2} &= sigmoid(Z_{2}) && \equiv \text{'p' in code}
+    \end{align*}
+    
+    \section{Backward path}
+    Since our final output of our forward calculations is a probability of sampling the action of going UP (=1),
+    basically a coin toss, we can make use of the \href{https://en.wikipedia.org/wiki/Bernoulli_distribution}{Bernoulli Distribution}:
+    \begin{align*}
+        p(y, \theta) = \theta^y * (1 - \theta)^{1 - y}
+    \end{align*}
+    The log-likelihood function is:
+    \begin{align*}
+        logL(\theta) = \sum_{i=1}^{n} y_{i} * \log(\theta) + \sum_{i=1}^{n} (1 - y_{i}) * \log(1 - \theta)
+    \end{align*}
+    Keep in mind that all our efforts during training focus on optimizing $\theta$ (represented by the 2-layer NN), in order to let us win as many games as possible.  
+    Our loss-function that we want to minimize is logL for n=1. $\theta$ is represented by A2 (or "p" in the code).
+    \begin{align*}
+        logL(\theta) = y * log(\theta) + (1 - y) * log(1 - \theta)
+    \end{align*}
+    Calculate the partial derivate of logL for $W_{2}$:
+    \begin{align*}
+        \frac{\partial logL}{\partial W_{2}} &= \frac{\partial logL}{\partial A_{2}} * \frac{\partial A_{2}}{\partial W_{2}} \\
+        &= \frac{\partial logL}{\partial A_{2}} * \frac{\partial A_{2}}{\partial Z_{2}}  * \frac{\partial Z_{2}}{\partial W_{2}} \\
+        &= (\frac{y}{A_{2}} - \frac{1 - y}{1 - A_{2}}) * (1 - A_{2}) * A_{2}  * A_{1} \\
+    \end{align*}
+    For sampled action being y=1 (UP):
+    \begin{align*}
+        \frac{\partial logL}{\partial W_{2}} &= (1 - A_{2}) * A_{1}
+    \end{align*}
+    For sampled action being down y=0 (DOWN):
+    \begin{align*}
+        \frac{\partial logL}{\partial W_{2}} &= - A_{2} * A_{1}
+    \end{align*}
+    Calculate partial derivate of logL for $W_{1}$:
+    \begin{align*}
+        \frac{\partial logL}{\partial W_{1}} &= \frac{\partial logL}{\partial A_{2}} * \frac{\partial A_{2}}{\partial W_{1}} \\
+        &= \frac{\partial logL}{\partial A_{2}} * \frac{\partial A_{2}}{\partial Z_{2}}  * \frac{\partial Z_{2}}{\partial W_{1}} \\
+        &= \frac{\partial logL}{\partial A_{2}} * \frac{\partial A_{2}}{\partial Z_{2}}  * \frac{\partial Z_{2}}{\partial A_{1}}
+        * \frac{\partial A_{1}}{\partial W_{1}} \\
+        &= \frac{\partial logL}{\partial A_{2}} * \frac{\partial A_{2}}{\partial Z_{2}}  * \frac{\partial Z_{2}}{\partial A_{1}}
+        * \frac{\partial A_{1}}{\partial Z_{1}} * \frac{\partial Z_{1}}{\partial W_{1}} \\
+        &= (\frac{y}{A_{2}} - \frac{1 - y}{1 - A_{2}}) * (1 - A_{2}) * A_{2}  * W_{2} * X
+    \end{align*}
+
+    
+\end{document}
