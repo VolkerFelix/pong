@@ -1,4 +1,4 @@
-# Trains an agent with (stochastic) Policy Gradients on Pong.
+# Trains an agent with (stochastic) Policy Gradients on Pong
 
 ![game](media/Game.gif)
 
