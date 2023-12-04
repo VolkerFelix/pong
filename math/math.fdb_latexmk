@@ -1,6 +1,6 @@
 # Fdb version 4
-["pdflatex"] 1701624481 "c:/GitRepos/pong/math/math.tex" "math.pdf" "math" 1701624483 0
-  "c:/GitRepos/pong/math/math.tex" 1701624480 3506 48a95e03f71fb96e6d61cc5ff48fb3bb ""
+["pdflatex"] 1701720367 "c:/GitRepos/pong/math/math.tex" "math.pdf" "math" 1701720367 0
+  "c:/GitRepos/pong/math/math.tex" 1701720366 4155 b4fe17506c86aaa41a5e25d693c28de1 ""
   "c:/Users/Volker/AppData/Roaming/TinyTeX/texmf-dist/fonts/tfm/public/amsfonts/cmextra/cmex7.tfm" 1701400682 1004 54797486969f23fa377b128694d548df ""
   "c:/Users/Volker/AppData/Roaming/TinyTeX/texmf-dist/fonts/tfm/public/cm/cmbx12.tfm" 1701400650 1324 c910af8c371558dc20f2d7822f66fe64 ""
   "c:/Users/Volker/AppData/Roaming/TinyTeX/texmf-dist/fonts/tfm/public/cm/cmr12.tfm" 1701400650 1288 655e228510b4c2a1abe905c368440826 ""
@@ -63,9 +63,9 @@
   "c:/Users/Volker/AppData/Roaming/TinyTeX/texmf-var/fonts/map/pdftex/updmap/pdftex.map" 1701400750 94259 aec9939469efac8f0cf917369f632359 ""
   "c:/Users/Volker/AppData/Roaming/TinyTeX/texmf-var/web2c/pdftex/pdflatex.fmt" 1701400772 6805486 6bfd3bc5407881b294f21402ffc4ff54 ""
   "c:/Users/Volker/AppData/Roaming/TinyTeX/texmf.cnf" 1701400662 903 164c5b127cd0d6dc91abad2f62421ea2 ""
-  "math.aux" 1701624482 381 b3f1871f645da2c24a52efb733ce9cf7 "pdflatex"
-  "math.out" 1701624482 217 d900ec167cd1b8876b8155719b7fcca7 "pdflatex"
-  "math.tex" 1701624480 3506 48a95e03f71fb96e6d61cc5ff48fb3bb ""
+  "math.aux" 1701720367 381 b3f1871f645da2c24a52efb733ce9cf7 "pdflatex"
+  "math.out" 1701720367 217 d900ec167cd1b8876b8155719b7fcca7 "pdflatex"
+  "math.tex" 1701720366 4155 b4fe17506c86aaa41a5e25d693c28de1 ""
   (generated)
   "math.aux"
   "math.log"

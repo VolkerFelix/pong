@@ -35,21 +35,13 @@
     \begin{align*}
         logL(\theta) = y * log(\theta) + (1 - y) * log(1 - \theta)
     \end{align*}
-    Calculate the partial derivate of logL for $W_{2}$:
+    Calculate the partial derivate of logL wrt. $W_{2}$:
     \begin{align*}
         \frac{\partial logL}{\partial W_{2}} &= \frac{\partial logL}{\partial A_{2}} * \frac{\partial A_{2}}{\partial W_{2}} \\
         &= \frac{\partial logL}{\partial A_{2}} * \frac{\partial A_{2}}{\partial Z_{2}}  * \frac{\partial Z_{2}}{\partial W_{2}} \\
-        &= (\frac{y}{A_{2}} - \frac{1 - y}{1 - A_{2}}) * (1 - A_{2}) * A_{2}  * A_{1} \\
+        &= \underbrace{(\frac{y}{A_{2}} - \frac{1 - y}{1 - A_{2}}) * (1 - A_{2}) * A_{2}}_\text{'dlogps' in code}  * A_{1} \\
     \end{align*}
-    For sampled action being y=1 (UP):
-    \begin{align*}
-        \frac{\partial logL}{\partial W_{2}} &= (1 - A_{2}) * A_{1}
-    \end{align*}
-    For sampled action being down y=0 (DOWN):
-    \begin{align*}
-        \frac{\partial logL}{\partial W_{2}} &= - A_{2} * A_{1}
-    \end{align*}
-    Calculate partial derivate of logL for $W_{1}$:
+    Calculate partial derivate of logL wrt. $W_{1}$:
     \begin{align*}
         \frac{\partial logL}{\partial W_{1}} &= \frac{\partial logL}{\partial A_{2}} * \frac{\partial A_{2}}{\partial W_{1}} \\
         &= \frac{\partial logL}{\partial A_{2}} * \frac{\partial A_{2}}{\partial Z_{2}}  * \frac{\partial Z_{2}}{\partial W_{1}} \\
@@ -57,7 +49,27 @@
         * \frac{\partial A_{1}}{\partial W_{1}} \\
         &= \frac{\partial logL}{\partial A_{2}} * \frac{\partial A_{2}}{\partial Z_{2}}  * \frac{\partial Z_{2}}{\partial A_{1}}
         * \frac{\partial A_{1}}{\partial Z_{1}} * \frac{\partial Z_{1}}{\partial W_{1}} \\
-        &= (\frac{y}{A_{2}} - \frac{1 - y}{1 - A_{2}}) * (1 - A_{2}) * A_{2}  * W_{2} * X
+        &= \underbrace{(\frac{y}{A_{2}} - \frac{1 - y}{1 - A_{2}}) * (1 - A_{2}) * A_{2}}_\text{'dlogps' in code}  * W_{2}
+        * \left\{\begin{array}{lr}
+            0, & \text{for } Z_{1} < 0 \\
+            1, & \text{for } Z_{1} > 0
+        \end{array}\right\} * X
+    \end{align*}
+    For sampled action being y=1 (UP):
+    \begin{align*}
+        \frac{\partial logL}{\partial W_{2}} &= (1 - A_{2}) * A_{1} \\
+        \frac{\partial logL}{\partial W_{1}} &= (1 - A_{2}) * W_{2}* \left\{\begin{array}{lr}
+            0, & \text{for } Z_{1} < 0 \\
+            1, & \text{for } Z_{1} > 0
+        \end{array}\right\} * X
+    \end{align*}
+    For sampled action being down y=0 (DOWN):
+    \begin{align*}
+        \frac{\partial logL}{\partial W_{2}} &= - A_{2} * A_{1} \\
+        \frac{\partial logL}{\partial W_{1}} &= - A_{2} * W_{2} * \left\{\begin{array}{lr}
+            0, & \text{for } Z_{1} < 0 \\
+            1, & \text{for } Z_{1} > 0
+        \end{array}\right\} * X
     \end{align*}
 
     
