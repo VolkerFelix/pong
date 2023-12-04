@@ -27,3 +27,7 @@ W2: (1 x 200)
 ![Page1](media/Page1.png)
 ![Page2](media/Page2.png)
 
+## References
+[Andrej Kaparthy blog](https://karpathy.github.io/2016/05/31/rl/) 
+
+
