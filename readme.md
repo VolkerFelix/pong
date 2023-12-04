@@ -28,6 +28,8 @@ W2: (1 x 200)
 ![Page2](media/Page2.png)
 
 ## References
-[Andrej Kaparthy blog](https://karpathy.github.io/2016/05/31/rl/) 
+[Andrej Kaparthy blog](https://karpathy.github.io/2016/05/31/rl/)  
+[David Silver - Reinforcement Learning](https://www.davidsilver.uk/teaching/)  
+[Richard S. Sutton - Reinforcement Learning: An Introduction](http://www.incompleteideas.net/book/the-book.html)
 
 
